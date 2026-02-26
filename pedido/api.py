@@ -31,24 +31,24 @@ def _puede_gestionar_pedido(usuario, pedido: PedidoModel) -> bool:
 
 
 @router.get('/listar_todos', response=List[Pedido], auth=AuthBearer())
-@search_filter(['estado', 'creado_por__nombre', 'usuario_destino__nombre'])
 @paginate
+@search_filter(['estado', 'creado_por__nombre', 'usuario_destino__nombre'])
 @requiere_admin
 def listar_pedidos(request, busqueda: str = None):
 	return PedidoModel.objects.order_by('-fecha_actualizacion')
 
 
 @router.get('/mis_pedidos_hechos', response=List[Pedido], auth=AuthBearer())
-@search_filter(['estado'])
 @paginate
+@search_filter(['estado'])
 def listar_mis_pedidos_hechos(request, busqueda: str = None):
 	usuario = request.auth
 	return PedidoModel.objects.filter(creado_por_id=usuario.id).order_by('-fecha_actualizacion')
 
 
 @router.get('/mis_pedidos_recibidos', response=List[Pedido], auth=AuthBearer())
-@search_filter(['estado'])
 @paginate
+@search_filter(['estado'])
 def listar_mis_pedidos_recibidos(request, busqueda: str = None):
 	usuario = request.auth
 	return PedidoModel.objects.filter(usuario_destino_id=usuario.id).order_by('-fecha_actualizacion')
@@ -116,8 +116,8 @@ def eliminar_pedido(request, pedido_id: int):
 
 
 @router.get('/productos_pedido/por_pedido/{pedido_id}/proveedor/{proveedor_id}', response=List[PedidoDetalle], auth=AuthBearer())
-@search_filter(['producto__nombre'])
 @paginate
+@search_filter(['producto__nombre'])
 def listar_productos_pedido_por_proveedor(request, pedido_id: int, proveedor_id: int, busqueda: str = None):
 	pedido = get_object_or_404(PedidoModel, id=pedido_id)
 	if not _es_participante_o_admin(request.auth, pedido):

@@ -15,8 +15,8 @@ router = Router(tags=['Productos'])
 
 
 @router.get('/listar_por_proveedor/{proveedor_id}', response=List[ProductoList])
-@search_filter(['nombre', 'descripcion'])
 @paginate
+@search_filter(['nombre', 'descripcion'])
 def listar_productos_por_proveedor(request, proveedor_id: int, busqueda: str = None):
 	return ProductoModel.objects.filter(proveedor_id=proveedor_id).order_by('-fecha_actualizacion')
 

@@ -49,16 +49,16 @@ def mi_perfil(request):
 
 
 @router.get('/listar_todos', response=List[Usuario], auth=AuthBearer())
-@search_filter(['nombre', 'nombre_sucursal', 'rol'])
 @paginate
+@search_filter(['nombre', 'nombre_sucursal', 'rol'])
 @requiere_admin
 def listar_usuarios(request, busqueda: str = None):
 	return UsuarioModel.objects.order_by('-fecha_actualizacion')
 
 
 @router.get('/listar_sucursales', response=List[Usuario], auth=None)
-@search_filter(['nombre', 'nombre_sucursal'])
 @paginate
+@search_filter(['nombre', 'nombre_sucursal'])
 def listar_sucursales(request, busqueda: str = None):
 	return UsuarioModel.objects.exclude(rol=UsuarioModel.RolChoices.ADMIN_GENERAL).order_by('-fecha_actualizacion')
 
