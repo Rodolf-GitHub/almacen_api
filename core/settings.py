@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'proveedor.apps.ProveedorConfig',
     'producto.apps.ProductoConfig',
     'pedido.apps.PedidoConfig',
+    'dashboard.apps.DashboardConfig',
     #'django.contrib.admin',
     #'django.contrib.auth',
     #'django.contrib.contenttypes',
