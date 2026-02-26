@@ -9,7 +9,7 @@ from core.utils.search_filter import search_filter
 from usuario.auth import AuthBearer, GenerateToken, requiere_admin, es_admin
 from usuario.models import Usuario as UsuarioModel
 
-router = Router(prefix='/usuarios', tags=['Usuarios'])
+router = Router(tags=['Usuarios'])
 
 
 def _es_self_o_admin(usuario_autenticado, usuario_id: int) -> bool:

@@ -11,7 +11,7 @@ from core.utils.delete_image_file import delete_image_file
 from producto.models import Producto as ProductoModel
 from usuario.auth import AuthBearer
 
-router = Router(prefix='/productos', tags=['Productos'])
+router = Router(tags=['Productos'])
 
 
 @router.get('/listar_por_proveedor/{proveedor_id}', response=List[ProductoList])

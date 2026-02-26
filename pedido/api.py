@@ -10,7 +10,7 @@ from pedido.models import Pedido as PedidoModel
 from pedido.models import PedidoDetalle as PedidoDetalleModel
 from usuario.auth import AuthBearer, es_admin, requiere_admin
 
-router = Router(prefix='/pedidos', tags=['Pedidos'])
+router = Router(tags=['Pedidos'])
 
 
 def _es_participante_o_admin(usuario, pedido: PedidoModel) -> bool:

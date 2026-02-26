@@ -31,13 +31,17 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
+    'corsheaders',
     'core.apps.CoreConfig',
+    'usuario.apps.UsuarioConfig',
+    'proveedor.apps.ProveedorConfig',
+    'producto.apps.ProductoConfig',
+    'pedido.apps.PedidoConfig',
     #'django.contrib.admin',
     #'django.contrib.auth',
     #'django.contrib.contenttypes',
     #'django.contrib.sessions',
     #'django.contrib.messages',
-    'corsheaders',
     'django.contrib.staticfiles',
 ]
 

@@ -8,7 +8,7 @@ from core.utils.search_filter import search_filter
 from proveedor.models import Proveedor as ProveedorModel
 from usuario.auth import AuthBearer
 
-router = Router(prefix='/proveedores', tags=['Proveedores'])
+router = Router(tags=['Proveedores'])
 
 
 @router.get('/listar_todos', response=List[Proveedor])
