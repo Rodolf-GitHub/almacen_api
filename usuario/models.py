@@ -4,7 +4,7 @@ from core.models import BaseModel
 class Usuario(BaseModel):
     nombre = models.CharField(max_length=15,unique=True)
     contrasena_hasheada = models.CharField(max_length=100)
-    nombre_sucursal = models.CharField(max_length=100)
+    nombre_sucursal = models.CharField(max_length=100,unique=True)
     token = models.CharField(max_length=128, blank=True, null=True)
     class RolChoices(models.TextChoices):
         ADMIN_GENERAL = 'admin_general', 'Admin General'
