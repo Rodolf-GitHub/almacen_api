@@ -14,11 +14,11 @@ from usuario.auth import AuthBearer
 router = Router(prefix='/productos', tags=['Productos'])
 
 
-@router.get('/listar_todos', response=List[Producto])
-@search_filter(['nombre', 'descripcion', 'proveedor__nombre'])
+@router.get('/listar_por_proveedor/{proveedor_id}', response=List[Producto])
+@search_filter(['nombre', 'descripcion'])
 @paginate
-def listar_productos(request, busqueda: str = None):
-	return ProductoModel.objects.order_by('-fecha_actualizacion')
+def listar_productos_por_proveedor(request, proveedor_id: int, busqueda: str = None):
+	return ProductoModel.objects.filter(proveedor_id=proveedor_id).order_by('-fecha_actualizacion')
 
 
 @router.get('/obtener/{producto_id}', response=Producto)
