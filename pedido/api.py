@@ -8,6 +8,7 @@ from .schemas import *
 from core.utils.search_filter import search_filter
 from pedido.models import Pedido as PedidoModel
 from pedido.models import PedidoDetalle as PedidoDetalleModel
+from proveedor.models import Proveedor as ProveedorModel
 from usuario.auth import AuthBearer, es_admin, requiere_admin
 
 router = Router(tags=['Pedidos'])
@@ -114,14 +115,41 @@ def eliminar_pedido(request, pedido_id: int):
 		return Response({'success': False, 'error': str(e)}, status=400)
 
 
-@router.get('/productos_pedido/por_pedido/{pedido_id}', response=List[PedidoDetalle], auth=AuthBearer())
+@router.get('/productos_pedido/por_pedido/{pedido_id}/proveedor/{proveedor_id}', response=List[PedidoDetalle], auth=AuthBearer())
 @search_filter(['producto__nombre'])
 @paginate
-def listar_productos_pedido(request, pedido_id: int, busqueda: str = None):
+def listar_productos_pedido_por_proveedor(request, pedido_id: int, proveedor_id: int, busqueda: str = None):
 	pedido = get_object_or_404(PedidoModel, id=pedido_id)
 	if not _es_participante_o_admin(request.auth, pedido):
 		return Response({'success': False, 'error': 'No autorizado'}, status=403)
-	return PedidoDetalleModel.objects.filter(pedido_id=pedido_id).order_by('-fecha_actualizacion')
+	return PedidoDetalleModel.objects.filter(
+		pedido_id=pedido_id,
+		producto__proveedor_id=proveedor_id,
+	).order_by('-fecha_actualizacion')
+
+
+@router.get('/proveedores_resumen/por_pedido/{pedido_id}', response=List[PedidoProveedorResumen], auth=AuthBearer())
+def listar_proveedores_resumen_por_pedido(request, pedido_id: int):
+	pedido = get_object_or_404(PedidoModel, id=pedido_id)
+	if not _es_participante_o_admin(request.auth, pedido):
+		return Response({'success': False, 'error': 'No autorizado'}, status=403)
+
+	proveedores = ProveedorModel.objects.order_by('nombre')
+	resumen = []
+
+	for proveedor in proveedores:
+		cantidad = PedidoDetalleModel.objects.filter(
+			pedido_id=pedido_id,
+			producto__proveedor_id=proveedor.id,
+		).aggregate(total=models.Sum('cantidad'))['total'] or 0
+
+		resumen.append({
+			'proveedor_id': proveedor.id,
+			'proveedor_nombre': proveedor.nombre,
+			'cantidad_productos_pedidos': cantidad,
+		})
+
+	return resumen
 
 
 @router.post('/productos_pedido/crear', response=PedidoDetalle, auth=AuthBearer())

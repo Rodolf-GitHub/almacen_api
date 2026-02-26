@@ -69,3 +69,9 @@ class PedidoDetalleCreate(Schema):
 
 class PedidoDetalleUpdate(Schema):
 	cantidad: Optional[int] = None
+
+
+class PedidoProveedorResumen(Schema):
+	proveedor_id: int
+	proveedor_nombre: str
+	cantidad_productos_pedidos: int
