@@ -1,7 +1,74 @@
 from ninja import Router
+from ninja import File, UploadedFile
 from ninja.pagination import paginate
 from django.shortcuts import get_object_or_404
+from ninja.responses import Response
+from typing import List
 from .schemas import *
 from core.utils.search_filter import search_filter
+from core.utils.compress_image import compress_image
+from core.utils.delete_image_file import delete_image_file
+from producto.models import Producto as ProductoModel
+from usuario.auth import AuthBearer
 
-router = Router()
+router = Router(prefix='/productos', tags=['Productos'])
+
+
+@router.get('/listar_todos', response=List[Producto])
+@search_filter(['nombre', 'descripcion', 'proveedor__nombre'])
+@paginate
+def listar_productos(request, busqueda: str = None):
+	return ProductoModel.objects.order_by('-fecha_actualizacion')
+
+
+@router.get('/obtener/{producto_id}', response=Producto)
+def obtener_producto(request, producto_id: int):
+	return get_object_or_404(ProductoModel, id=producto_id)
+
+
+@router.post('/crear', response=Producto, auth=AuthBearer())
+def crear_producto(request, data: ProductoCreate, imagen: File[UploadedFile] = None):
+	try:
+		if ProductoModel.objects.count() >= 2000:
+			return Response({'success': False, 'error': 'Límite de 2000 productos alcanzado, contacte con el programador.'}, status=400)
+
+		producto = ProductoModel.objects.create(**data.dict())
+
+		if imagen:
+			imagen_comprimida = compress_image(imagen)
+			producto.imagen.save(imagen.name, imagen_comprimida, save=True)
+
+		return producto
+	except Exception as e:
+		return Response({'success': False, 'error': str(e)}, status=400)
+
+
+@router.patch('/actualizar/{producto_id}', response=Producto, auth=AuthBearer())
+def actualizar_producto(request, producto_id: int, data: ProductoUpdate, imagen: File[UploadedFile] = None):
+	try:
+		producto = get_object_or_404(ProductoModel, id=producto_id)
+
+		for attr, value in data.dict(exclude_unset=True).items():
+			setattr(producto, attr, value)
+
+		if imagen:
+			delete_image_file(producto.imagen)
+			imagen_comprimida = compress_image(imagen)
+			producto.imagen.save(imagen.name, imagen_comprimida, save=True)
+		else:
+			producto.save()
+
+		return producto
+	except Exception as e:
+		return Response({'success': False, 'error': str(e)}, status=400)
+
+
+@router.delete('/eliminar/{producto_id}', auth=AuthBearer())
+def eliminar_producto(request, producto_id: int):
+	try:
+		producto = get_object_or_404(ProductoModel, id=producto_id)
+		delete_image_file(producto.imagen)
+		producto.delete()
+		return {'success': True}
+	except Exception as e:
+		return Response({'success': False, 'error': str(e)}, status=400)
