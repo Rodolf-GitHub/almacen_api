@@ -4,7 +4,21 @@ from decimal import Decimal
 from producto.models import Producto as ProductoModel
 
 
-class Producto(ModelSchema):
+class ProductoList(ModelSchema):
+	proveedor_nombre: Optional[str] = None
+
+	class Meta:
+		model = ProductoModel
+		exclude = ['descripcion']
+
+	@staticmethod
+	def resolve_proveedor_nombre(obj):
+		if not obj.proveedor_id:
+			return None
+		return obj.proveedor.nombre
+
+
+class ProductoDetail(ModelSchema):
 	proveedor_nombre: Optional[str] = None
 
 	class Meta:

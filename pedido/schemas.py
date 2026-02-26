@@ -42,6 +42,7 @@ class PedidoCambiarEstado(Schema):
 
 class PedidoDetalle(ModelSchema):
 	producto_nombre: Optional[str] = None
+	producto_imagen: Optional[str] = None
 
 	class Meta:
 		model = PedidoDetalleModel
@@ -52,6 +53,12 @@ class PedidoDetalle(ModelSchema):
 		if not obj.producto_id:
 			return None
 		return obj.producto.nombre
+
+	@staticmethod
+	def resolve_producto_imagen(obj):
+		if not obj.producto_id or not obj.producto.imagen:
+			return None
+		return obj.producto.imagen.url
 
 
 class PedidoDetalleCreate(Schema):

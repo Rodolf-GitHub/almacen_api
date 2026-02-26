@@ -37,14 +37,20 @@ def listar_pedidos(request, busqueda: str = None):
 	return PedidoModel.objects.order_by('-fecha_actualizacion')
 
 
-@router.get('/mis_pedidos', response=List[Pedido], auth=AuthBearer())
+@router.get('/mis_pedidos_hechos', response=List[Pedido], auth=AuthBearer())
 @search_filter(['estado'])
 @paginate
-def listar_mis_pedidos(request, busqueda: str = None):
+def listar_mis_pedidos_hechos(request, busqueda: str = None):
 	usuario = request.auth
-	return PedidoModel.objects.filter(
-		models.Q(creado_por_id=usuario.id) | models.Q(usuario_destino_id=usuario.id)
-	).order_by('-fecha_actualizacion')
+	return PedidoModel.objects.filter(creado_por_id=usuario.id).order_by('-fecha_actualizacion')
+
+
+@router.get('/mis_pedidos_recibidos', response=List[Pedido], auth=AuthBearer())
+@search_filter(['estado'])
+@paginate
+def listar_mis_pedidos_recibidos(request, busqueda: str = None):
+	usuario = request.auth
+	return PedidoModel.objects.filter(usuario_destino_id=usuario.id).order_by('-fecha_actualizacion')
 
 
 @router.get('/obtener/{pedido_id}', response=Pedido, auth=AuthBearer())
@@ -108,52 +114,52 @@ def eliminar_pedido(request, pedido_id: int):
 		return Response({'success': False, 'error': str(e)}, status=400)
 
 
-@router.get('/detalles/por_pedido/{pedido_id}', response=List[PedidoDetalle], auth=AuthBearer())
+@router.get('/productos_pedido/por_pedido/{pedido_id}', response=List[PedidoDetalle], auth=AuthBearer())
 @search_filter(['producto__nombre'])
 @paginate
-def listar_detalles_por_pedido(request, pedido_id: int, busqueda: str = None):
+def listar_productos_pedido(request, pedido_id: int, busqueda: str = None):
 	pedido = get_object_or_404(PedidoModel, id=pedido_id)
 	if not _es_participante_o_admin(request.auth, pedido):
 		return Response({'success': False, 'error': 'No autorizado'}, status=403)
 	return PedidoDetalleModel.objects.filter(pedido_id=pedido_id).order_by('-fecha_actualizacion')
 
 
-@router.post('/detalles/crear', response=PedidoDetalle, auth=AuthBearer())
-def crear_detalle_pedido(request, data: PedidoDetalleCreate):
+@router.post('/productos_pedido/crear', response=PedidoDetalle, auth=AuthBearer())
+def crear_producto_pedido(request, data: PedidoDetalleCreate):
 	try:
 		pedido = get_object_or_404(PedidoModel, id=data.pedido_id)
 		if not _puede_gestionar_pedido(request.auth, pedido):
 			return Response({'success': False, 'error': 'No autorizado'}, status=403)
 
-		detalle = PedidoDetalleModel.objects.create(**data.dict())
-		return detalle
+		producto_pedido = PedidoDetalleModel.objects.create(**data.dict())
+		return producto_pedido
 	except Exception as e:
 		return Response({'success': False, 'error': str(e)}, status=400)
 
 
-@router.patch('/detalles/actualizar/{detalle_id}', response=PedidoDetalle, auth=AuthBearer())
-def actualizar_detalle_pedido(request, detalle_id: int, data: PedidoDetalleUpdate):
+@router.patch('/productos_pedido/actualizar/{producto_pedido_id}', response=PedidoDetalle, auth=AuthBearer())
+def actualizar_producto_pedido(request, producto_pedido_id: int, data: PedidoDetalleUpdate):
 	try:
-		detalle = get_object_or_404(PedidoDetalleModel, id=detalle_id)
-		if not _puede_gestionar_pedido(request.auth, detalle.pedido):
+		producto_pedido = get_object_or_404(PedidoDetalleModel, id=producto_pedido_id)
+		if not _puede_gestionar_pedido(request.auth, producto_pedido.pedido):
 			return Response({'success': False, 'error': 'No autorizado'}, status=403)
 
 		for attr, value in data.dict(exclude_unset=True).items():
-			setattr(detalle, attr, value)
-		detalle.save()
-		return detalle
+			setattr(producto_pedido, attr, value)
+		producto_pedido.save()
+		return producto_pedido
 	except Exception as e:
 		return Response({'success': False, 'error': str(e)}, status=400)
 
 
-@router.delete('/detalles/eliminar/{detalle_id}', auth=AuthBearer())
-def eliminar_detalle_pedido(request, detalle_id: int):
+@router.delete('/productos_pedido/eliminar/{producto_pedido_id}', auth=AuthBearer())
+def eliminar_producto_pedido(request, producto_pedido_id: int):
 	try:
-		detalle = get_object_or_404(PedidoDetalleModel, id=detalle_id)
-		if not _puede_gestionar_pedido(request.auth, detalle.pedido):
+		producto_pedido = get_object_or_404(PedidoDetalleModel, id=producto_pedido_id)
+		if not _puede_gestionar_pedido(request.auth, producto_pedido.pedido):
 			return Response({'success': False, 'error': 'No autorizado'}, status=403)
 
-		detalle.delete()
+		producto_pedido.delete()
 		return {'success': True}
 	except Exception as e:
 		return Response({'success': False, 'error': str(e)}, status=400)
