@@ -6,8 +6,8 @@ class Producto(BaseModel):
     nombre = models.CharField(max_length=100,unique=True)
     imagen = models.ImageField(upload_to='productos/', blank=True, null=True)
     descripcion = models.TextField(blank=True, null=True)
-    precio_compra = models.DecimalField(max_digits=10, decimal_places=2)
-    precio_venta = models.DecimalField(max_digits=10, decimal_places=2)
+    precio_compra = models.DecimalField(max_digits=10, decimal_places=2,null=True, blank=True)
+    precio_venta = models.DecimalField(max_digits=10, decimal_places=2,null=True, blank=True)
 
     class Meta:
         db_table = 'producto'
