@@ -6,16 +6,10 @@ from ninja.responses import Response
 from typing import List
 from .schemas import *
 from core.utils.search_filter import search_filter
-from usuario.auth import AuthBearer, GenerateToken, requiere_admin, es_admin
+from usuario.auth import AuthBearer, GenerateToken, requiere_admin
 from usuario.models import Usuario as UsuarioModel
 
 router = Router(tags=['Usuarios'])
-
-
-def _es_self_o_admin(usuario_autenticado, usuario_id: int) -> bool:
-	if not usuario_autenticado:
-		return False
-	return usuario_autenticado.id == usuario_id or es_admin(usuario_autenticado)
 
 
 @router.post('/login', response=TokenResponse, auth=None)
@@ -62,12 +56,15 @@ def listar_usuarios(request, busqueda: str = None):
 	return UsuarioModel.objects.order_by('-fecha_actualizacion')
 
 
-@router.get('/obtener/{usuario_id}', response=Usuario, auth=AuthBearer())
-def obtener_usuario(request, usuario_id: int):
-	usuario_autenticado = request.auth
-	if not _es_self_o_admin(usuario_autenticado, usuario_id):
-		return Response({'success': False, 'error': 'No autorizado'}, status=403)
+@router.get('/listar_sucursales', response=List[Usuario], auth=None)
+@search_filter(['nombre', 'nombre_sucursal'])
+@paginate
+def listar_sucursales(request, busqueda: str = None):
+	return UsuarioModel.objects.exclude(rol=UsuarioModel.RolChoices.ADMIN_GENERAL).order_by('-fecha_actualizacion')
 
+
+@router.get('/obtener/{usuario_id}', response=Usuario, auth=None)
+def obtener_usuario(request, usuario_id: int):
 	usuario = get_object_or_404(UsuarioModel, id=usuario_id)
 	return usuario
 
