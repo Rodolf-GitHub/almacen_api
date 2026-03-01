@@ -31,37 +31,27 @@ def _puede_gestionar_pedido(usuario, pedido: PedidoModel) -> bool:
 
 
 def _construir_resumen_copia_pedido(pedido: PedidoModel, proveedor: Optional[ProveedorModel] = None) -> dict:
-	detalles = PedidoDetalleModel.objects.filter(pedido_id=pedido.id).select_related('producto', 'producto__proveedor').order_by('id')
+	detalles = PedidoDetalleModel.objects.filter(pedido_id=pedido.id).select_related('producto', 'producto__proveedor')
 
 	if proveedor:
 		detalles = detalles.filter(producto__proveedor_id=proveedor.id)
 
+	detalles = detalles.order_by('producto__proveedor__nombre', 'producto__nombre', 'id')
+
 	productos = []
 	cantidad_total = 0
-	proveedores_map = {}
 
 	for detalle in detalles:
 		cantidad_total += detalle.cantidad
 		producto_item = {
+			'proveedor_id': detalle.producto.proveedor_id,
+			'proveedor_nombre': detalle.producto.proveedor.nombre,
 			'producto_id': detalle.producto_id,
 			'producto_nombre': detalle.producto.nombre,
 			'cantidad': detalle.cantidad,
 			'fecha_creacion': detalle.fecha_creacion,
 		}
 		productos.append(producto_item)
-
-		if not proveedor:
-			proveedor_id = detalle.producto.proveedor_id
-			if proveedor_id not in proveedores_map:
-				proveedores_map[proveedor_id] = {
-					'proveedor_id': proveedor_id,
-					'proveedor_nombre': detalle.producto.proveedor.nombre,
-					'cantidad_total_productos': 0,
-					'productos': [],
-				}
-
-			proveedores_map[proveedor_id]['cantidad_total_productos'] += detalle.cantidad
-			proveedores_map[proveedor_id]['productos'].append(producto_item)
 
 	return {
 		'pedido_id': pedido.id,
@@ -74,7 +64,6 @@ def _construir_resumen_copia_pedido(pedido: PedidoModel, proveedor: Optional[Pro
 		'fecha_actualizacion': pedido.fecha_actualizacion,
 		'cantidad_total_productos': cantidad_total,
 		'productos': productos,
-		'proveedores': list(proveedores_map.values()) if not proveedor else [],
 	}
 
 
