@@ -63,6 +63,18 @@ def listar_sucursales(request, busqueda: str = None):
 	return UsuarioModel.objects.exclude(rol=UsuarioModel.RolChoices.ADMIN_GENERAL).order_by('-fecha_actualizacion')
 
 
+@router.get('/listar_sucursales_para_pedido', response=List[Usuario], auth=AuthBearer())
+@paginate
+@search_filter(['nombre', 'nombre_sucursal'])
+def listar_sucursales_para_pedido(request, busqueda: str = None):
+	usuario = request.auth
+	return UsuarioModel.objects.exclude(
+		rol=UsuarioModel.RolChoices.ADMIN_GENERAL,
+	).exclude(
+		id=usuario.id,
+	).order_by('-fecha_actualizacion')
+
+
 @router.get('/obtener/{usuario_id}', response=Usuario, auth=None)
 def obtener_usuario(request, usuario_id: int):
 	usuario = get_object_or_404(UsuarioModel, id=usuario_id)
