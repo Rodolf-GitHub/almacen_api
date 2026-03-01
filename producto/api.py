@@ -2,6 +2,7 @@ from ninja import Router
 from ninja import File, UploadedFile
 from ninja.pagination import paginate
 from django.shortcuts import get_object_or_404
+from django.db import IntegrityError
 from ninja.responses import Response
 from typing import List
 from .schemas import *
@@ -39,6 +40,13 @@ def crear_producto(request, data: ProductoCreate, imagen: File[UploadedFile] = N
 		if ProductoModel.objects.count() >= 2000:
 			return Response({'success': False, 'error': 'Límite de 2000 productos alcanzado, contacte con el programador.'}, status=400)
 
+		existe = ProductoModel.objects.filter(
+			proveedor_id=data.proveedor_id,
+			nombre__iexact=data.nombre,
+		).exists()
+		if existe:
+			return Response({'success': False, 'error': 'Ya existe un producto con ese nombre en este proveedor'}, status=400)
+
 		producto = ProductoModel.objects.create(**data.dict())
 
 		if imagen:
@@ -46,6 +54,8 @@ def crear_producto(request, data: ProductoCreate, imagen: File[UploadedFile] = N
 			producto.imagen.save(imagen.name, imagen_comprimida, save=True)
 
 		return get_object_or_404(ProductoModel.objects.select_related('proveedor', 'categoria'), id=producto.id)
+	except IntegrityError:
+		return Response({'success': False, 'error': 'Ya existe un producto con ese nombre en este proveedor'}, status=400)
 	except Exception as e:
 		return Response({'success': False, 'error': str(e)}, status=400)
 
@@ -54,8 +64,18 @@ def crear_producto(request, data: ProductoCreate, imagen: File[UploadedFile] = N
 def actualizar_producto(request, producto_id: int, data: ProductoUpdate, imagen: File[UploadedFile] = None):
 	try:
 		producto = get_object_or_404(ProductoModel, id=producto_id)
+		payload = data.dict(exclude_unset=True)
 
-		for attr, value in data.dict(exclude_unset=True).items():
+		proveedor_id_final = payload.get('proveedor_id', producto.proveedor_id)
+		nombre_final = payload.get('nombre', producto.nombre)
+		existe = ProductoModel.objects.filter(
+			proveedor_id=proveedor_id_final,
+			nombre__iexact=nombre_final,
+		).exclude(id=producto.id).exists()
+		if existe:
+			return Response({'success': False, 'error': 'Ya existe un producto con ese nombre en este proveedor'}, status=400)
+
+		for attr, value in payload.items():
 			setattr(producto, attr, value)
 
 		if imagen:
@@ -66,6 +86,8 @@ def actualizar_producto(request, producto_id: int, data: ProductoUpdate, imagen:
 			producto.save()
 
 		return get_object_or_404(ProductoModel.objects.select_related('proveedor', 'categoria'), id=producto.id)
+	except IntegrityError:
+		return Response({'success': False, 'error': 'Ya existe un producto con ese nombre en este proveedor'}, status=400)
 	except Exception as e:
 		return Response({'success': False, 'error': str(e)}, status=400)
 

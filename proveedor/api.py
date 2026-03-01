@@ -1,6 +1,7 @@
 from ninja import Router
 from ninja.pagination import paginate
 from django.shortcuts import get_object_or_404
+from django.db import IntegrityError
 from ninja.responses import Response
 from typing import List
 from .schemas import *
@@ -26,10 +27,16 @@ def obtener_proveedor(request, proveedor_id: int):
 @router.post('/crear', response=Proveedor, auth=AuthBearer())
 def crear_proveedor(request, data: ProveedorCreate):
 	try:
+		existe = ProveedorModel.objects.filter(nombre__iexact=data.nombre).exists()
+		if existe:
+			return Response({'success': False, 'error': 'Ya existe un proveedor con ese nombre'}, status=400)
+
 		payload = data.dict()
 		payload['creado_por'] = request.auth
 		proveedor = ProveedorModel.objects.create(**payload)
 		return proveedor
+	except IntegrityError:
+		return Response({'success': False, 'error': 'Ya existe un proveedor con ese nombre'}, status=400)
 	except Exception as e:
 		return Response({'success': False, 'error': str(e)}, status=400)
 
@@ -38,10 +45,18 @@ def crear_proveedor(request, data: ProveedorCreate):
 def actualizar_proveedor(request, proveedor_id: int, data: ProveedorUpdate):
 	try:
 		proveedor = get_object_or_404(ProveedorModel, id=proveedor_id)
-		for attr, value in data.dict(exclude_unset=True).items():
+		payload = data.dict(exclude_unset=True)
+
+		nuevo_nombre = payload.get('nombre')
+		if nuevo_nombre and ProveedorModel.objects.filter(nombre__iexact=nuevo_nombre).exclude(id=proveedor.id).exists():
+			return Response({'success': False, 'error': 'Ya existe un proveedor con ese nombre'}, status=400)
+
+		for attr, value in payload.items():
 			setattr(proveedor, attr, value)
 		proveedor.save()
 		return proveedor
+	except IntegrityError:
+		return Response({'success': False, 'error': 'Ya existe un proveedor con ese nombre'}, status=400)
 	except Exception as e:
 		return Response({'success': False, 'error': str(e)}, status=400)
 
