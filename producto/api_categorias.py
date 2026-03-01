@@ -5,11 +5,20 @@ from ninja.responses import Response
 from typing import List
 
 from producto.models import CategoriaProducto as CategoriaProductoModel
-from .schemas import CategoriaProductoSchema, CategoriaProductoUpdate
+from .schemas import CategoriaProductoSchema, CategoriaProductoCreate, CategoriaProductoUpdate
 from core.utils.search_filter import search_filter
 
 
 router = Router(tags=['Categorias Producto'])
+
+
+@router.post('/crear', response=CategoriaProductoSchema, auth=None)
+def crear_categoria_producto(request, data: CategoriaProductoCreate):
+	try:
+		categoria = CategoriaProductoModel.objects.create(**data.dict())
+		return categoria
+	except Exception as e:
+		return Response({'success': False, 'error': str(e)}, status=400)
 
 
 @router.get('/listar_todas', response=List[CategoriaProductoSchema], auth=None)
