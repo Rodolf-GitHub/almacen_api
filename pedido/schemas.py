@@ -92,6 +92,13 @@ class PedidoCopiaItem(Schema):
 	fecha_creacion: datetime
 
 
+class PedidoCopiaProveedor(Schema):
+	proveedor_id: int
+	proveedor_nombre: str
+	cantidad_total_productos: int
+	productos: List[PedidoCopiaItem]
+
+
 class PedidoCopiaResumen(Schema):
 	pedido_id: int
 	estado: str
@@ -102,4 +109,5 @@ class PedidoCopiaResumen(Schema):
 	fecha_creacion: datetime
 	fecha_actualizacion: datetime
 	cantidad_total_productos: int
-	productos: List[PedidoCopiaItem]
+	productos: List[PedidoCopiaItem] = []
+	proveedores: List[PedidoCopiaProveedor] = []
