@@ -3,6 +3,8 @@ from ninja.pagination import paginate
 from django.shortcuts import get_object_or_404
 from ninja.responses import Response
 from django.db import models
+from django.db.models import F, Q
+from django.db.models.functions import Coalesce
 from typing import List, Optional
 from .schemas import *
 from core.utils.search_filter import search_filter
@@ -184,27 +186,28 @@ def listar_productos_pedido_por_proveedor(request, pedido_id: int, proveedor_id:
 
 
 @router.get('/proveedores_resumen/por_pedido/{pedido_id}', response=List[PedidoProveedorResumen], auth=AuthBearer())
+@paginate
+@search_filter(['nombre'])
 def listar_proveedores_resumen_por_pedido(request, pedido_id: int):
 	pedido = get_object_or_404(PedidoModel, id=pedido_id)
 	if not _es_participante_o_admin(request.auth, pedido):
 		return Response({'success': False, 'error': 'No autorizado'}, status=403)
 
-	proveedores = ProveedorModel.objects.order_by('nombre')
-	resumen = []
-
-	for proveedor in proveedores:
-		cantidad = PedidoDetalleModel.objects.filter(
-			pedido_id=pedido_id,
-			producto__proveedor_id=proveedor.id,
-		).aggregate(total=models.Sum('cantidad'))['total'] or 0
-
-		resumen.append({
-			'proveedor_id': proveedor.id,
-			'proveedor_nombre': proveedor.nombre,
-			'cantidad_productos_pedidos': cantidad,
-		})
-
-	return resumen
+	return ProveedorModel.objects.annotate(
+		cantidad_productos_pedidos=Coalesce(
+			models.Sum(
+				'productos__pedidodetalle__cantidad',
+				filter=Q(productos__pedidodetalle__pedido_id=pedido_id),
+			),
+			0,
+		),
+		proveedor_id=F('id'),
+		proveedor_nombre=F('nombre'),
+	).order_by('-cantidad_productos_pedidos', 'nombre').values(
+		'proveedor_id',
+		'proveedor_nombre',
+		'cantidad_productos_pedidos',
+	)
 
 
 @router.post('/productos_pedido/crear', response=PedidoDetalle, auth=AuthBearer())
