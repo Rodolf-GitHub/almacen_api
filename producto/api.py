@@ -21,6 +21,13 @@ def listar_productos_por_proveedor(request, proveedor_id: int, busqueda: str = N
 	return ProductoModel.objects.filter(proveedor_id=proveedor_id).order_by('-fecha_actualizacion')
 
 
+@router.get('/listar_todos', response=List[ProductoList])
+@paginate
+@search_filter(['nombre', 'descripcion'])
+def listar_productos_todos(request, busqueda: str = None):
+	return ProductoModel.objects.order_by('-fecha_actualizacion')
+
+
 @router.get('/obtener/{producto_id}', response=ProductoDetail)
 def obtener_producto(request, producto_id: int):
 	return get_object_or_404(ProductoModel, id=producto_id)
