@@ -16,21 +16,21 @@ router = Router(tags=['Productos'])
 
 @router.get('/listar_por_proveedor/{proveedor_id}', response=List[ProductoList])
 @paginate
-@search_filter(['nombre', 'descripcion'])
+@search_filter(['nombre', 'descripcion', 'categoria__nombre'])
 def listar_productos_por_proveedor(request, proveedor_id: int, busqueda: str = None):
-	return ProductoModel.objects.filter(proveedor_id=proveedor_id).order_by('-fecha_actualizacion')
+	return ProductoModel.objects.filter(proveedor_id=proveedor_id).select_related('proveedor', 'categoria').order_by('-fecha_actualizacion')
 
 
 @router.get('/listar_todos', response=List[ProductoList])
 @paginate
-@search_filter(['nombre', 'descripcion'])
+@search_filter(['nombre', 'descripcion', 'categoria__nombre'])
 def listar_productos_todos(request, busqueda: str = None):
-	return ProductoModel.objects.order_by('-fecha_actualizacion')
+	return ProductoModel.objects.select_related('proveedor', 'categoria').order_by('-fecha_actualizacion')
 
 
 @router.get('/obtener/{producto_id}', response=ProductoDetail)
 def obtener_producto(request, producto_id: int):
-	return get_object_or_404(ProductoModel, id=producto_id)
+	return get_object_or_404(ProductoModel.objects.select_related('proveedor', 'categoria'), id=producto_id)
 
 
 @router.post('/crear', response=ProductoDetail, auth=AuthBearer())
@@ -45,7 +45,7 @@ def crear_producto(request, data: ProductoCreate, imagen: File[UploadedFile] = N
 			imagen_comprimida = compress_image(imagen)
 			producto.imagen.save(imagen.name, imagen_comprimida, save=True)
 
-		return producto
+		return get_object_or_404(ProductoModel.objects.select_related('proveedor', 'categoria'), id=producto.id)
 	except Exception as e:
 		return Response({'success': False, 'error': str(e)}, status=400)
 
@@ -65,7 +65,7 @@ def actualizar_producto(request, producto_id: int, data: ProductoUpdate, imagen:
 		else:
 			producto.save()
 
-		return producto
+		return get_object_or_404(ProductoModel.objects.select_related('proveedor', 'categoria'), id=producto.id)
 	except Exception as e:
 		return Response({'success': False, 'error': str(e)}, status=400)
 

@@ -1,7 +1,8 @@
 from ninja import Schema, ModelSchema
 from typing import Optional
 from decimal import Decimal
-from producto.models import Producto as ProductoModel,CategoriaProducto
+from producto.models import Producto as ProductoModel
+from producto.models import CategoriaProducto as CategoriaProductoModel
 
 
 class ProductoList(ModelSchema):
@@ -63,10 +64,14 @@ class ProductoUpdate(Schema):
 	precio_venta: Optional[Decimal] = None
 	categoria_id: Optional[int] = None
 
-class CategoriaProducto(ModelSchema):
+class CategoriaProductoSchema(ModelSchema):
 	class Meta:
-		model = CategoriaProducto
+		model = CategoriaProductoModel
 		fields = '__all__'
 
 class CategoriaProductoCreate(Schema):
 	nombre: str
+
+
+class CategoriaProductoUpdate(Schema):
+	nombre: Optional[str] = None
