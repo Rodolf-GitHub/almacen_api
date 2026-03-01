@@ -1,11 +1,12 @@
 from ninja import Schema, ModelSchema
 from typing import Optional
 from decimal import Decimal
-from producto.models import Producto as ProductoModel
+from producto.models import Producto as ProductoModel,CategoriaProducto
 
 
 class ProductoList(ModelSchema):
 	proveedor_nombre: Optional[str] = None
+	categoria_nombre: Optional[str] = None
 
 	class Meta:
 		model = ProductoModel
@@ -16,10 +17,17 @@ class ProductoList(ModelSchema):
 		if not obj.proveedor_id:
 			return None
 		return obj.proveedor.nombre
+	
+	@staticmethod
+	def resolve_categoria_nombre(obj):
+		if not obj.categoria_id:
+			return None
+		return obj.categoria.nombre
 
 
 class ProductoDetail(ModelSchema):
 	proveedor_nombre: Optional[str] = None
+	categoria_nombre: Optional[str] = None
 
 	class Meta:
 		model = ProductoModel
@@ -30,6 +38,12 @@ class ProductoDetail(ModelSchema):
 		if not obj.proveedor_id:
 			return None
 		return obj.proveedor.nombre
+	
+	@staticmethod
+	def resolve_categoria_nombre(obj):
+		if not obj.categoria_id:
+			return None
+		return obj.categoria.nombre
 
 
 class ProductoCreate(Schema):
@@ -38,6 +52,7 @@ class ProductoCreate(Schema):
 	descripcion: Optional[str] = None
 	precio_compra: Optional[Decimal] = None
 	precio_venta: Optional[Decimal] = None
+	categoria_id: Optional[int] = None
 
 
 class ProductoUpdate(Schema):
@@ -46,3 +61,12 @@ class ProductoUpdate(Schema):
 	descripcion: Optional[str] = None
 	precio_compra: Optional[Decimal] = None
 	precio_venta: Optional[Decimal] = None
+	categoria_id: Optional[int] = None
+
+class CategoriaProducto(ModelSchema):
+	class Meta:
+		model = CategoriaProducto
+		fields = '__all__'
+
+class CategoriaProductoCreate(Schema):
+	nombre: str
