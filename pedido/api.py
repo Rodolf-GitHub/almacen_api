@@ -217,6 +217,13 @@ def crear_producto_pedido(request, data: PedidoDetalleCreate):
 		if not _puede_gestionar_pedido(request.auth, pedido):
 			return Response({'success': False, 'error': 'No autorizado'}, status=403)
 
+		existe = PedidoDetalleModel.objects.filter(
+			pedido_id=data.pedido_id,
+			producto_id=data.producto_id,
+		).exists()
+		if existe:
+			return Response({'success': False, 'error': 'Este producto ya fue agregado al pedido'}, status=400)
+
 		producto_pedido = PedidoDetalleModel.objects.create(**data.dict())
 		return producto_pedido
 	except Exception as e:

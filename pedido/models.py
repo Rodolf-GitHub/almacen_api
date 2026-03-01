@@ -15,4 +15,12 @@ class PedidoDetalle(BaseModel):
     producto = models.ForeignKey('producto.Producto', on_delete=models.CASCADE)
     cantidad = models.PositiveIntegerField()
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['pedido', 'producto'],
+                name='unique_producto_por_pedido'
+            )
+        ]
+
 
