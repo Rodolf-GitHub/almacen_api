@@ -1,13 +1,16 @@
 from ninja import Schema, ModelSchema
-from typing import Optional
+from typing import Optional, Annotated
 from decimal import Decimal
+from pydantic import StringConstraints
 from producto.models import Producto as ProductoModel
 from producto.models import CategoriaProducto as CategoriaProductoModel
 
+Str50 = Annotated[str, StringConstraints(max_length=50)]
+
 
 class ProductoList(ModelSchema):
-	proveedor_nombre: Optional[str] = None
-	categoria_nombre: Optional[str] = None
+	proveedor_nombre: Optional[Str50] = None
+	categoria_nombre: Optional[Str50] = None
 
 	class Meta:
 		model = ProductoModel
@@ -27,8 +30,8 @@ class ProductoList(ModelSchema):
 
 
 class ProductoDetail(ModelSchema):
-	proveedor_nombre: Optional[str] = None
-	categoria_nombre: Optional[str] = None
+	proveedor_nombre: Optional[Str50] = None
+	categoria_nombre: Optional[Str50] = None
 
 	class Meta:
 		model = ProductoModel
@@ -49,8 +52,8 @@ class ProductoDetail(ModelSchema):
 
 class ProductoCreate(Schema):
 	proveedor_id: int
-	nombre: str
-	descripcion: Optional[str] = None
+	nombre: Str50
+	descripcion: Optional[Str50] = None
 	precio_compra: Optional[Decimal] = None
 	precio_venta: Optional[Decimal] = None
 	categoria_id: Optional[int] = None
@@ -58,8 +61,8 @@ class ProductoCreate(Schema):
 
 class ProductoUpdate(Schema):
 	proveedor_id: Optional[int] = None
-	nombre: Optional[str] = None
-	descripcion: Optional[str] = None
+	nombre: Optional[Str50] = None
+	descripcion: Optional[Str50] = None
 	precio_compra: Optional[Decimal] = None
 	precio_venta: Optional[Decimal] = None
 	categoria_id: Optional[int] = None
@@ -70,8 +73,8 @@ class CategoriaProductoSchema(ModelSchema):
 		fields = '__all__'
 
 class CategoriaProductoCreate(Schema):
-	nombre: str
+	nombre: Str50
 
 
 class CategoriaProductoUpdate(Schema):
-	nombre: Optional[str] = None
+	nombre: Optional[Str50] = None

@@ -1,6 +1,9 @@
 from ninja import Schema, ModelSchema
-from typing import Optional
+from typing import Optional, Annotated
+from pydantic import StringConstraints
 from proveedor.models import Proveedor as ProveedorModel
+
+Str50 = Annotated[str, StringConstraints(max_length=50)]
 
 
 class Proveedor(ModelSchema):
@@ -10,12 +13,12 @@ class Proveedor(ModelSchema):
 
 
 class ProveedorCreate(Schema):
-	nombre: str
-	telefono: Optional[str] = None
+	nombre: Str50
+	telefono: Optional[Str50] = None
 
 
 class ProveedorUpdate(Schema):
-	nombre: Optional[str] = None
-	telefono: Optional[str] = None
+	nombre: Optional[Str50] = None
+	telefono: Optional[Str50] = None
 
 

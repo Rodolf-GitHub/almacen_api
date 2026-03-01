@@ -1,17 +1,20 @@
 from ninja import Schema, ModelSchema
-from typing import Optional
+from typing import Optional, Annotated
 from typing import Literal
 from typing import List
 from datetime import datetime
 from django.db.models import Sum
+from pydantic import StringConstraints
 
 from pedido.models import Pedido as PedidoModel
 from pedido.models import PedidoDetalle as PedidoDetalleModel
 
+Str50 = Annotated[str, StringConstraints(max_length=50)]
+
 
 class Pedido(ModelSchema):
-	creado_por_nombre: Optional[str] = None
-	usuario_destino_nombre: Optional[str] = None
+	creado_por_nombre: Optional[Str50] = None
+	usuario_destino_nombre: Optional[Str50] = None
 	cantidad_productos: int = 0
 
 	class Meta:
@@ -49,8 +52,8 @@ class PedidoCambiarEstado(Schema):
 
 
 class PedidoDetalle(ModelSchema):
-	producto_nombre: Optional[str] = None
-	producto_imagen: Optional[str] = None
+	producto_nombre: Optional[Str50] = None
+	producto_imagen: Optional[Str50] = None
 
 	class Meta:
 		model = PedidoDetalleModel
@@ -81,26 +84,26 @@ class PedidoDetalleUpdate(Schema):
 
 class PedidoProveedorResumen(Schema):
 	proveedor_id: int
-	proveedor_nombre: str
+	proveedor_nombre: Str50
 	cantidad_productos_pedidos: int
 
 
 class PedidoCopiaItem(Schema):
 	proveedor_id: int
-	proveedor_nombre: str
+	proveedor_nombre: Str50
 	producto_id: int
-	producto_nombre: str
+	producto_nombre: Str50
 	cantidad: int
 	fecha_creacion: datetime
 
 
 class PedidoCopiaResumen(Schema):
 	pedido_id: int
-	estado: str
-	creado_por_nombre: Optional[str] = None
-	usuario_destino_nombre: Optional[str] = None
+	estado: Str50
+	creado_por_nombre: Optional[Str50] = None
+	usuario_destino_nombre: Optional[Str50] = None
 	proveedor_id: Optional[int] = None
-	proveedor_nombre: Optional[str] = None
+	proveedor_nombre: Optional[Str50] = None
 	fecha_creacion: datetime
 	fecha_actualizacion: datetime
 	cantidad_total_productos: int
