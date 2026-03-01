@@ -3,7 +3,7 @@ from ninja.pagination import paginate
 from django.shortcuts import get_object_or_404
 from ninja.responses import Response
 from django.db import models
-from typing import List
+from typing import List, Optional
 from .schemas import *
 from core.utils.search_filter import search_filter
 from pedido.models import Pedido as PedidoModel
@@ -28,6 +28,38 @@ def _puede_gestionar_pedido(usuario, pedido: PedidoModel) -> bool:
 	if es_admin(usuario):
 		return True
 	return pedido.creado_por_id == usuario.id
+
+
+def _construir_resumen_copia_pedido(pedido: PedidoModel, proveedor: Optional[ProveedorModel] = None) -> dict:
+	detalles = PedidoDetalleModel.objects.filter(pedido_id=pedido.id).select_related('producto', 'producto__proveedor').order_by('id')
+
+	if proveedor:
+		detalles = detalles.filter(producto__proveedor_id=proveedor.id)
+
+	productos = []
+	cantidad_total = 0
+
+	for detalle in detalles:
+		cantidad_total += detalle.cantidad
+		productos.append({
+			'producto_id': detalle.producto_id,
+			'producto_nombre': detalle.producto.nombre,
+			'cantidad': detalle.cantidad,
+			'fecha_creacion': detalle.fecha_creacion,
+		})
+
+	return {
+		'pedido_id': pedido.id,
+		'estado': pedido.estado,
+		'creado_por_nombre': pedido.creado_por.nombre if pedido.creado_por_id else None,
+		'usuario_destino_nombre': pedido.usuario_destino.nombre if pedido.usuario_destino_id else None,
+		'proveedor_id': proveedor.id if proveedor else None,
+		'proveedor_nombre': proveedor.nombre if proveedor else None,
+		'fecha_creacion': pedido.fecha_creacion,
+		'fecha_actualizacion': pedido.fecha_actualizacion,
+		'cantidad_total_productos': cantidad_total,
+		'productos': productos,
+	}
 
 
 @router.get('/listar_todos', response=List[Pedido], auth=AuthBearer())
@@ -60,6 +92,24 @@ def obtener_pedido(request, pedido_id: int):
 	if not _es_participante_o_admin(request.auth, pedido):
 		return Response({'success': False, 'error': 'No autorizado'}, status=403)
 	return pedido
+
+
+@router.get('/copiar_pedido/completo/{pedido_id}', response=PedidoCopiaResumen, auth=AuthBearer())
+def copiar_pedido_completo(request, pedido_id: int):
+	pedido = get_object_or_404(PedidoModel, id=pedido_id)
+	if not _es_participante_o_admin(request.auth, pedido):
+		return Response({'success': False, 'error': 'No autorizado'}, status=403)
+	return _construir_resumen_copia_pedido(pedido)
+
+
+@router.get('/copiar_pedido/por_proveedor/{pedido_id}/{proveedor_id}', response=PedidoCopiaResumen, auth=AuthBearer())
+def copiar_pedido_por_proveedor(request, pedido_id: int, proveedor_id: int):
+	pedido = get_object_or_404(PedidoModel, id=pedido_id)
+	if not _es_participante_o_admin(request.auth, pedido):
+		return Response({'success': False, 'error': 'No autorizado'}, status=403)
+
+	proveedor = get_object_or_404(ProveedorModel, id=proveedor_id)
+	return _construir_resumen_copia_pedido(pedido, proveedor=proveedor)
 
 
 @router.post('/crear', response=Pedido, auth=AuthBearer())

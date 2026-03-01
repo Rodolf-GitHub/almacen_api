@@ -1,6 +1,9 @@
 from ninja import Schema, ModelSchema
 from typing import Optional
 from typing import Literal
+from typing import List
+from datetime import datetime
+from django.db.models import Sum
 
 from pedido.models import Pedido as PedidoModel
 from pedido.models import PedidoDetalle as PedidoDetalleModel
@@ -9,6 +12,7 @@ from pedido.models import PedidoDetalle as PedidoDetalleModel
 class Pedido(ModelSchema):
 	creado_por_nombre: Optional[str] = None
 	usuario_destino_nombre: Optional[str] = None
+	cantidad_productos: int = 0
 
 	class Meta:
 		model = PedidoModel
@@ -25,6 +29,10 @@ class Pedido(ModelSchema):
 		if not obj.usuario_destino_id:
 			return None
 		return obj.usuario_destino.nombre
+
+	@staticmethod
+	def resolve_cantidad_productos(obj):
+		return obj.detalles.aggregate(total=Sum('cantidad'))['total'] or 0
 
 
 class PedidoCreate(Schema):
@@ -75,3 +83,23 @@ class PedidoProveedorResumen(Schema):
 	proveedor_id: int
 	proveedor_nombre: str
 	cantidad_productos_pedidos: int
+
+
+class PedidoCopiaItem(Schema):
+	producto_id: int
+	producto_nombre: str
+	cantidad: int
+	fecha_creacion: datetime
+
+
+class PedidoCopiaResumen(Schema):
+	pedido_id: int
+	estado: str
+	creado_por_nombre: Optional[str] = None
+	usuario_destino_nombre: Optional[str] = None
+	proveedor_id: Optional[int] = None
+	proveedor_nombre: Optional[str] = None
+	fecha_creacion: datetime
+	fecha_actualizacion: datetime
+	cantidad_total_productos: int
+	productos: List[PedidoCopiaItem]
