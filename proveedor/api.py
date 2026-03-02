@@ -16,7 +16,7 @@ router = Router(tags=['Proveedores'])
 @paginate
 @search_filter(['nombre', 'telefono'])
 def listar_proveedores(request, busqueda: str = None):
-	return ProveedorModel.objects.order_by('-fecha_actualizacion')
+	return ProveedorModel.objects.order_by('nombre', 'id')
 
 
 @router.get('/obtener/{proveedor_id}', response=Proveedor)

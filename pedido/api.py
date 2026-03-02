@@ -182,7 +182,7 @@ def listar_productos_pedido_por_proveedor(request, pedido_id: int, proveedor_id:
 	return PedidoDetalleModel.objects.filter(
 		pedido_id=pedido_id,
 		producto__proveedor_id=proveedor_id,
-	).order_by('-fecha_actualizacion')
+	).order_by('producto__nombre', 'id')
 
 
 @router.get('/productos_pedido/por_pedido/{pedido_id}', response=List[PedidoDetalle], auth=AuthBearer())
