@@ -29,6 +29,9 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-&r!i-fd%phyh$h&)!2p
 DEBUG = os.getenv('DJANGO_DEBUG', 'True').lower() in ('1', 'true', 'yes', 'on')
 
 ALLOWED_HOSTS = [host.strip() for host in os.getenv('DJANGO_ALLOWED_HOSTS', '*').split(',') if host.strip()]
+for local_host in ['localhost', '127.0.0.1']:
+    if local_host not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(local_host)
 
 
 # Application definition
@@ -156,6 +159,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://localhost:8000",
     "https://almacen.rodolfogroero.com",
 ]
 
