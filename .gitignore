@@ -13,3 +13,6 @@ wheels/
 db.sqlite3
 
 /media
+
+# env vars
+.env
