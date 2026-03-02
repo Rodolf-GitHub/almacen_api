@@ -15,10 +15,12 @@ class Proveedor(ModelSchema):
 class ProveedorCreate(Schema):
 	nombre: Str50
 	telefono: Optional[Str50] = None
+	cuenta_bancaria: Optional[Str50] = None
 
 
 class ProveedorUpdate(Schema):
 	nombre: Optional[Str50] = None
 	telefono: Optional[Str50] = None
+	cuenta_bancaria: Optional[Str50] = None
 
 

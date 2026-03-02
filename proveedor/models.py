@@ -4,6 +4,7 @@ from core.models import BaseModel
 class Proveedor(BaseModel):
     nombre = models.CharField(max_length=50,unique=True)
     telefono = models.CharField(max_length=50,null=True, blank=True)
+    cuenta_bancaria = models.CharField(max_length=50,null=True, blank=True)
     creado_por = models.ForeignKey('usuario.Usuario', on_delete=models.SET_NULL, null=True, blank=True)
 
     class Meta:
