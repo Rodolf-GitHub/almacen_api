@@ -185,6 +185,25 @@ def listar_productos_pedido_por_proveedor(request, pedido_id: int, proveedor_id:
 	).order_by('-fecha_actualizacion')
 
 
+@router.get('/productos_pedido/por_pedido/{pedido_id}', response=List[PedidoDetalle], auth=AuthBearer())
+@paginate
+@search_filter(['producto__nombre', 'producto__proveedor__nombre'])
+def listar_productos_pedido(request, pedido_id: int, busqueda: str = None):
+	pedido = get_object_or_404(PedidoModel, id=pedido_id)
+	if not _es_participante_o_admin(request.auth, pedido):
+		return Response({'success': False, 'error': 'No autorizado'}, status=403)
+
+	return PedidoDetalleModel.objects.filter(
+		pedido_id=pedido_id,
+	).select_related(
+		'producto',
+		'producto__proveedor',
+	).order_by(
+		'producto__proveedor__nombre',
+		'producto__nombre',
+	)
+
+
 @router.get('/proveedores_resumen/por_pedido/{pedido_id}', response=List[PedidoProveedorResumen], auth=AuthBearer())
 @paginate
 @search_filter(['nombre'])
